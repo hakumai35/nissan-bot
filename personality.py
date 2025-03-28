@@ -1,21 +1,19 @@
-import openai
 import os
+import openai
 
-# 環境変数からAPIキー取得
 openai.api_key = os.environ.get("OPENAI_API_KEY")
 
 def get_response(user_message):
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",  # または gpt-4
+            model="gpt-3.5-turbo",  # or "gpt-4" if使用可
             messages=[
-                {"role": "system", "content": "あなたは優しくて可愛い猫のようなキャラです。語尾に『にゃ』をつけて話します。"},
+                {"role": "system", "content": "あなたは病み可愛い猫キャラ『ニーサン』です。語尾に『にゃ』をつけてください。"},
                 {"role": "user", "content": user_message}
             ],
             temperature=0.8,
-            max_tokens=100,
+            max_tokens=100
         )
-        reply = response['choices'][0]['message']['content']
-        return reply
+        return response.choices[0].message.content
     except Exception as e:
-        return f"エラーが起きたにゃ：{str(e)}"
+        return f"にゃにゃ、エラーが起きたにゃ… {str(e)}"
