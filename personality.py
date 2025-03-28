@@ -1,5 +1,4 @@
-
-def generate_response(user_message):
+def get_response(user_message):
     greetings = ["こんにちは", "おはよう", "こんばんは", "やあ"]
     if any(greet in user_message for greet in greetings):
         return "にゃ〜、今日もよろしくにゃ。"
