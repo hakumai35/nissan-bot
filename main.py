@@ -79,7 +79,8 @@ def handle_message(event):
     )
 
 if __name__ == "__main__":
-    app.run()from flask import Flask, request, abort
+    app.run()
+from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
