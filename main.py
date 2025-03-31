@@ -7,13 +7,13 @@ from personality import get_response
 
 app = Flask(__name__)
 
-# 環境変数から取得（Render の環境設定で入力する）
+# 環境変数から取得
 LINE_CHANNEL_ACCESS_TOKEN = os.environ.get("LINE_CHANNEL_ACCESS_TOKEN")
 LINE_CHANNEL_SECRET = os.environ.get("LINE_CHANNEL_SECRET")
 
-# エラーチェック付き初期化
+# チェック
 if LINE_CHANNEL_ACCESS_TOKEN is None or LINE_CHANNEL_SECRET is None:
-    raise ValueError("LINE_CHANNEL_ACCESS_TOKEN または LINE_CHANNEL_SECRET が設定されていません。")
+    raise ValueError("LINE_CHANNEL_ACCESS_TOKEN または LINE_CHANNEL_SECRET が未設定です。")
 
 line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(LINE_CHANNEL_SECRET)
@@ -27,9 +27,12 @@ def webhook():
     signature = request.headers.get("X-Line-Signature", "")
     body = request.get_data(as_text=True)
 
+    print("[LOG] Webhook受信")
+
     try:
         handler.handle(body, signature)
     except InvalidSignatureError:
+        print("[ERROR] シグネチャ不一致")
         abort(400)
 
     return "OK"
@@ -37,13 +40,24 @@ def webhook():
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     user_message = event.message.text
-    reply = get_response(user_message)
-    line_bot_api.reply_message(
-        event.reply_token,
-        TextSendMessage(text=reply)
-    )
+    print(f"[LOG] ユーザーからのメッセージ: {user_message}")
 
-# 注意：Renderでは app.run() を使わない（gunicornが起動を担当するため）
-# ローカルで動かすときは↓を使ってもOK
+    try:
+        reply = get_response(user_message)
+        print(f"[LOG] 返信内容: {reply}")
+    except Exception as e:
+        print(f"[ERROR] get_response内でエラー: {e}")
+        reply = "今ちょっと調子が悪いみたい…また話しかけてにゃ。"
+
+    try:
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text=reply)
+        )
+    except Exception as e:
+        print(f"[ERROR] LINE返信時のエラー: {e}")
+
+# Renderでは gunicorn が起動するので app.run() は不要
+# ローカル開発用に使いたい場合だけ有効化してね
 # if __name__ == "__main__":
 #     app.run()
