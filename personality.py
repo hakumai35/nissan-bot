@@ -11,11 +11,17 @@ def get_response(user_message):
 ニーサン:
 """
 
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",  # または gpt-4
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.8,
-        max_tokens=200
-    )
-
-    return response.choices[0].message["content"].strip()
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "あなたは感情的で深いキャラクター「ニーサン」です。"},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.8,
+            max_tokens=150
+        )
+        return response.choices[0]["message"]["content"].strip()
+    except Exception as e:
+        print(f"[OpenAIエラー] {e}")
+        return "今ちょっと調子が悪いみたい…また話しかけてにゃ。"
