@@ -43,5 +43,7 @@ def handle_message(event):
         TextSendMessage(text=reply)
     )
 
-if __name__ == "__main__":
-    app.run()
+# 注意：Renderでは app.run() を使わない（gunicornが起動を担当するため）
+# ローカルで動かすときは↓を使ってもOK
+# if __name__ == "__main__":
+#     app.run()
