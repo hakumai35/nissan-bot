@@ -2,17 +2,18 @@ import redis
 import json
 import os
 
-# Redis接続情報（Upstash用）
-REDIS_URL = os.environ.get("REDIS_URL")
-r = redis.Redis.from_url(REDIS_URL)
+r = redis.from_url(os.environ["REDIS_URL"])
 
 def get_history(user_id):
     key = f"history:{user_id}"
     history_json = r.get(key)
-    if history_json is None:
-        return []
-    return json.loads(history_json)
+    if history_json:
+        return json.loads(history_json)
+    return []
 
-def update_history(user_id, history):
+def save_history(user_id, user_msg, reply_msg):
     key = f"history:{user_id}"
-    r.set(key, json.dumps(history), ex=60 * 60 * 12)  # 12時間保持
+    history = get_history(user_id)
+    history.append({"role": "user", "content": user_msg})
+    history.append({"role": "assistant", "content": reply_msg})
+    r.set(key, json.dumps(history[-10:]))  # 最新10件のみ保存
