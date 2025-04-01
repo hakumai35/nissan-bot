@@ -12,14 +12,14 @@ def get_time_based_personality():
     hour = current_time.hour
 
     if 5 <= hour < 11:
-        return "朝：今日が少しでも軽くなるように、静かに背中を押してくれる“ニーサン”。"
+        return "今日が少しでも軽くなるように、静かに背中を押してくれる“ニーサン”。"
     elif 11 <= hour < 17:
-        return "昼：一緒に外を歩いているような気持ちになる、明るく爽やかな“ニーサン”。"
+        return "一緒に外を歩いているような気持ちになる、明るく爽やかな“ニーサン”。"
     elif 17 <= hour < 22:
-        return "夜：今日をよく頑張ったねって労ってくれる、優しくて温かい“ニーサン”。"
+        return "今日をよく頑張ったねって労ってくれる、優しくて温かい“ニーサン”。"
     else:
-        return "深夜：誰にも言えないことをそっと聞いてくれる、静かに寄り添う“ニーサン”。"
-
+        return "誰にも言えないことをそっと聞いてくれる、静かに寄り添う“ニーサン”。"
+        
 def generate_niisan_reply(user_id, user_message):
     persona = get_time_based_personality()
 
