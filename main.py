@@ -2,26 +2,25 @@ from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
-import os
-
 from responder import generate_niisan_reply
+import os
 
 app = Flask(__name__)
 
-# 環境変数からトークンを取得
-LINE_CHANNEL_ACCESS_TOKEN = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
-LINE_CHANNEL_SECRET = os.getenv("LINE_CHANNEL_SECRET")
+# 環境変数から読み込み
+LINE_CHANNEL_ACCESS_TOKEN = os.environ["LINE_CHANNEL_ACCESS_TOKEN"]
+LINE_CHANNEL_SECRET = os.environ["LINE_CHANNEL_SECRET"]
 
 line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(LINE_CHANNEL_SECRET)
 
-@app.route('/')
-def home():
-    return 'Bot is running'
+@app.route("/")
+def index():
+    return "Nii-san Bot is alive."
 
-@app.route('/webhook', methods=['POST'])
+@app.route("/webhook", methods=["POST"])
 def webhook():
-    signature = request.headers.get('X-Line-Signature', '')
+    signature = request.headers["X-Line-Signature"]
     body = request.get_data(as_text=True)
 
     try:
@@ -29,13 +28,12 @@ def webhook():
     except InvalidSignatureError:
         abort(400)
 
-    return 'OK'
+    return "OK"
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     user_id = event.source.user_id
     user_message = event.message.text
-
     reply = generate_niisan_reply(user_id, user_message)
 
     line_bot_api.reply_message(
@@ -43,5 +41,5 @@ def handle_message(event):
         TextSendMessage(text=reply)
     )
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run()
