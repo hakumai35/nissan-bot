@@ -1,17 +1,19 @@
 import redis
-import json
 import os
+import json
 
 REDIS_URL = os.environ.get("REDIS_URL")
-r = redis.Redis.from_url(REDIS_URL)
+r = redis.from_url(REDIS_URL)
 
 def get_history(user_id):
     key = f"history:{user_id}"
     history_json = r.get(key)
-    if history_json:
-        return json.loads(history_json)
-    return []
+    if history_json is None:
+        return []
+    return json.loads(history_json)
 
-def save_history(user_id, history):
+def save_history(user_id, messages):
     key = f"history:{user_id}"
-    r.set(key, json.dumps(history), ex=60*60*12)  # 12時間有効
+    if len(messages) > 10:
+        messages = messages[-10:]
+    r.set(key, json.dumps(messages))
