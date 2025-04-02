@@ -1,25 +1,27 @@
-from flask import Flask, request, jsonify
-from personality import generate_reply
+from flask import Flask, request
 import os
+from personality import generate_reply
+import openai
 
 app = Flask(__name__)
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
-    data = request.get_json()
-
-    # 安全チェックを入れる
     try:
+        data = request.get_json()
         events = data.get("events", [])
-        if not events or "message" not in events[0] or "text" not in events[0]["message"]:
-            return jsonify({"status": "ignored"}), 200
+        if not events:
+            return "No events", 200
 
-        user_message = events[0]["message"]["text"]
+        user_message = events[0].get("message", {}).get("text", "")
+        if not user_message:
+            return "No message", 200
+
         reply = generate_reply(user_message)
-        return jsonify({"reply": reply}), 200
+        print("User:", user_message)
+        print("Bot:", reply)
+        return "OK", 200
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-if __name__ == "__main__":
-    app.run(debug=True)
+        print("Error in webhook:", str(e))
+        return "Internal Server Error", 500
