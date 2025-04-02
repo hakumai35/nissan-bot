@@ -1,31 +1,47 @@
-from flask import Flask, request
-from personality import generate_reply
+from flask import Flask, request, abort
+from linebot import LineBotApi, WebhookHandler
+from linebot.exceptions import InvalidSignatureError
+from linebot.models import MessageEvent, TextMessage, TextSendMessage
 import os
+from personality import generate_reply
 
 app = Flask(__name__)
 
+# 環境変数からLINEトークン取得
+LINE_CHANNEL_ACCESS_TOKEN = os.environ.get("LINE_CHANNEL_ACCESS_TOKEN")
+LINE_CHANNEL_SECRET = os.environ.get("LINE_CHANNEL_SECRET")
+
+if not LINE_CHANNEL_ACCESS_TOKEN or not LINE_CHANNEL_SECRET:
+    raise ValueError("LINEのトークンが設定されていません")
+
+line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
+handler = WebhookHandler(LINE_CHANNEL_SECRET)
+
+@app.route("/", methods=["GET"])
+def index():
+    return "ニーサンは待ってるよ"
+
 @app.route("/webhook", methods=["POST"])
 def webhook():
-    data = request.get_json()
+    signature = request.headers.get("X-Line-Signature", "")
+    body = request.get_data(as_text=True)
 
     try:
-        events = data.get("events", [])
-        if not events:
-            return "ok", 200
+        handler.handle(body, signature)
+    except InvalidSignatureError:
+        abort(400)
 
-        event = events[0]
-        user_message = event.get("message", {}).get("text", "")
-        if not user_message:
-            return "ok", 200
+    return "OK"
 
-        reply = generate_reply(user_message)
-        print(f"User: {user_message}")
-        print(f"Bot: {reply}")
-    except Exception as e:
-        print(f"Error: {e}")
-        return "ok", 200
+@handler.add(MessageEvent, message=TextMessage)
+def handle_message(event):
+    user_text = event.message.text
+    reply_text = generate_reply(user_text)
 
-    return "ok", 200
+    line_bot_api.reply_message(
+        event.reply_token,
+        TextSendMessage(text=reply_text)
+    )
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
