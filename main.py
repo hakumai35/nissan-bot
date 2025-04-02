@@ -1,9 +1,9 @@
 from flask import Flask, request, abort
+from personality import generate_reply
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
 import os
-from personality import generate_reply
 
 app = Flask(__name__)
 
@@ -21,15 +21,3 @@ def webhook():
         abort(400)
 
     return "OK"
-
-@handler.add(MessageEvent, message=TextMessage)
-def handle_message(event):
-    user_input = event.message.text
-    reply_text = generate_reply(user_input)
-    line_bot_api.reply_message(
-        event.reply_token,
-        TextSendMessage(text=reply_text)
-    )
-
-if __name__ == "__main__":
-    app.run()
