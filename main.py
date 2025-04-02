@@ -1,21 +1,35 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, abort
+from linebot import LineBotApi, WebhookHandler
+from linebot.exceptions import InvalidSignatureError
+from linebot.models import MessageEvent, TextMessage, TextSendMessage
+import os
 from personality import generate_reply
 
 app = Flask(__name__)
 
-@app.route("/")
-def index():
-    return "OK"
+line_bot_api = LineBotApi(os.environ["LINE_CHANNEL_ACCESS_TOKEN"])
+handler = WebhookHandler(os.environ["LINE_CHANNEL_SECRET"])
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
-    data = request.get_json()
+    signature = request.headers["X-Line-Signature"]
+    body = request.get_data(as_text=True)
 
     try:
-        event = data["events"][0]
-        user_input = event["message"]["text"]
-    except (KeyError, IndexError):
-        return jsonify({"error": "Invalid message format"}), 400
+        handler.handle(body, signature)
+    except InvalidSignatureError:
+        abort(400)
 
-    reply = generate_reply(user_input)
-    return jsonify({"reply": reply})
+    return "OK"
+
+@handler.add(MessageEvent, message=TextMessage)
+def handle_message(event):
+    user_input = event.message.text
+    reply_text = generate_reply(user_input)
+    line_bot_api.reply_message(
+        event.reply_token,
+        TextSendMessage(text=reply_text)
+    )
+
+if __name__ == "__main__":
+    app.run()
